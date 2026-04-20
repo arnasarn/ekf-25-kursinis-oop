@@ -1,3 +1,5 @@
+import tkinter as tk
+
 class Sensor:
     def read(self):
         raise NotImplementedError
@@ -30,3 +32,46 @@ class ECU:
             self.fan.activate("HIGH")
         else:
             self.fan.activate("LOW")
+
+class Engine:
+    def __init__(self):
+        self.rpm = 800
+
+    def increase_rpm(self):
+        self.rpm += 100
+
+    def decrease_rpm(self):
+        self.rpm = max(0, self.rpm - 100)
+
+
+class App:
+    def __init__(self, root):
+        self.engine = Engine()
+
+        self.label = tk.Label(root, text=f"RPM: {self.engine.rpm}")
+        self.label.pack()
+
+        tk.Button(root, text="Increase RPM", command=self.increase).pack()
+        tk.Button(root, text="Decrease RPM", command=self.decrease).pack()
+
+    def update_display(self):
+        self.label.config(text=f"RPM: {self.engine.rpm}")
+
+    def increase(self):
+        self.engine.increase_rpm()
+        self.update_display()
+
+    def decrease(self):
+        self.engine.decrease_rpm()
+        self.update_display()
+
+
+root = tk.Tk()
+root.title("ECU Simulator")
+app = App(root)
+root.mainloop()
+
+ecu = ECU()
+
+for _ in range(5):
+    ecu.update()
