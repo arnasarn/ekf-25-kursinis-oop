@@ -1,5 +1,36 @@
 import tkinter as tk
 
+class App:
+    def __init__(self, root):
+        self.engine = Engine()
+
+        self.label = tk.Label(root, text=f"RPM: {self.engine.rpm}", font=("Arial", 16))
+        self.label.pack(pady=20)
+
+        root.bind("<Up>", self.increase)
+        root.bind("<Down>", self.decrease)
+
+    def update_display(self):
+        self.label.config(text=f"RPM: {self.engine.rpm}")
+
+    def increase(self, event):
+        self.engine.increase_rpm()
+        self.update_display()
+
+    def decrease(self, event):
+        self.engine.decrease_rpm()
+        self.update_display()
+
+class Engine:
+    def __init__(self):
+        self.rpm = 800
+
+    def increase_rpm(self):
+        self.rpm += 100
+
+    def decrease_rpm(self):
+        self.rpm = max(0, self.rpm - 100)
+
 class Sensor:
     def read(self):
         raise NotImplementedError
@@ -33,41 +64,9 @@ class ECU:
         else:
             self.fan.activate("LOW")
 
-class Engine:
-    def __init__(self):
-        self.rpm = 800
-
-    def increase_rpm(self):
-        self.rpm += 100
-
-    def decrease_rpm(self):
-        self.rpm = max(0, self.rpm - 100)
-
-
-class App:
-    def __init__(self, root):
-        self.engine = Engine()
-
-        self.label = tk.Label(root, text=f"RPM: {self.engine.rpm}")
-        self.label.pack()
-
-        tk.Button(root, text="Increase RPM", command=self.increase).pack()
-        tk.Button(root, text="Decrease RPM", command=self.decrease).pack()
-
-    def update_display(self):
-        self.label.config(text=f"RPM: {self.engine.rpm}")
-
-    def increase(self):
-        self.engine.increase_rpm()
-        self.update_display()
-
-    def decrease(self):
-        self.engine.decrease_rpm()
-        self.update_display()
-
-
 root = tk.Tk()
 root.title("ECU Simulator")
+root.geometry("400x300")
 app = App(root)
 root.mainloop()
 
