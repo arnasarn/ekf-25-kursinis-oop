@@ -1,5 +1,6 @@
 import tkinter as tk
 
+#Pagrindinė aplikacijos klasė
 class App:
     def __init__(self, root):
         self.engine = Engine()
@@ -21,6 +22,7 @@ class App:
         self.engine.decrease_rpm()
         self.update_display()
 
+#Variklio klasė
 class Engine:
     def __init__(self):
         self.rpm = 800
@@ -31,6 +33,7 @@ class Engine:
     def decrease_rpm(self):
         self.rpm = max(0, self.rpm - 100)
 
+#Tėvinė jutiklio klasė ir klasės, kurios ją paveldi
 class Sensor:
     def read(self):
         raise NotImplementedError
@@ -40,13 +43,12 @@ class TemperatureSensor(Sensor):
     def read(self):
         return 90  # example value
 
-
-class Actuator:
+#Įrenginių tėvinė klasė ir klasės, kurios ją paveldi
+class Device:
     def activate(self, value):
         raise NotImplementedError
 
-
-class CoolingFan(Actuator):
+class CoolingFan(Device):
     def activate(self, value):
         print(f"Fan speed set to {value}")
 
@@ -64,13 +66,9 @@ class ECU:
         else:
             self.fan.activate("LOW")
 
+#Programos inicializavimas
 root = tk.Tk()
 root.title("ECU Simulator")
 root.geometry("400x300")
 app = App(root)
 root.mainloop()
-
-ecu = ECU()
-
-for _ in range(5):
-    ecu.update()
