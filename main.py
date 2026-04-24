@@ -2,43 +2,53 @@ import tkinter as tk
 
 #Pagrindinė aplikacijos klasė
 class App:
-    def __init__(self, root):
-        self._engine = Engine(ECU())
-        self._rpm_label = tk.Label(root, text=f"RPM: {self._engine._rpm}", font=("Arial", 16))
+    def __init__(self, root, ecu):
+        self._root = root
+        self._ecu = ecu
+        self._rpm_label = tk.Label(root, font=("Arial", 16))
         self._rpm_label.pack(pady=20)
 
-        self._throttle_label = tk.Label(root, text=f"Throttle: {self._engine._throttle}", font=("Arial", 16))
+        self._throttle_label = tk.Label(root, font=("Arial", 16))
         self._throttle_label.pack(pady=20)
+
+        self._temp_label = tk.Label(root, font=("Arial", 16))
+        self._temp_label.pack(pady=20)
 
 
         root.bind("<KeyPress-Up>", self.throttle_on)
         root.bind("<KeyRelease-Up>", self.throttle_off)
 
+        self.update_loop()
+
     def update_display(self):
-        self._rpm_label.config(text=f"RPM: {self._engine._rpm}")
-        self._throttle_label.config(text=f"Throttle: {self._engine._throttle}")
+        engine = self._ecu.get_engine()
+
+        self._rpm_label.config(text=f"RPM: {engine.get_rpm()}")
+        self._throttle_label.config(text=f"Throttle: {engine.get_throttle()}")
+        self._temp_label.config(text=f"Temperature: {engine.get_temperature():.1f}")
 
     def increase(self, event):
         self.engine.increase_rpm()
-        self.update_display()
 
     def throttle_on(self, event):
-        self._engine.set_throttle(1)
-        self.update_display()
+        self._ecu.set_throttle(1)
 
     def throttle_off(self, event):
-        self._engine.set_throttle(0)
+        self._ecu.set_throttle(0)
+
+    def update_loop(self):
+        self._ecu.update()
         self.update_display()
+        self._root.after(50, self.update_loop)
 
 
 #Variklio klasė
 class Engine:
-    def __init__(self, ecu):
+    def __init__(self):
         # Konfigūracija
         self._max_rpm = 7000
         self._idle_rpm = 800
         self._max_temp = 120
-        self._ecu = ecu
         
         # Būsena
         self._rpm = self._idle_rpm
@@ -52,6 +62,27 @@ class Engine:
 
         self._throttle = value
 
+    def set_temperature(self, value):
+        self._temperature = min(value, self._max_temp)
+
+    def update(self):
+        if self._throttle == 1:
+            self._rpm += 100
+            if self._rpm > self._max_rpm:
+                self._rpm = self._max_rpm
+        else:
+            if self._rpm > self._idle_rpm:
+                self._rpm -= 100
+
+    def get_rpm(self):
+        return self._rpm
+
+    def get_throttle(self):
+        return self._throttle
+
+    def get_temperature(self):
+        return self._temperature
+
 
 #Tėvinė jutiklio klasė ir klasės, kurios ją paveldi
 class Sensor:
@@ -60,8 +91,8 @@ class Sensor:
 
 
 class TemperatureSensor(Sensor):
-    def read(self):
-        return 90  # example value
+    def read(self, engine):
+        return 50 + engine.get_rpm() * 0.01
 
 
 #Įrenginių tėvinė klasė ir klasės, kurios ją paveldi
@@ -75,24 +106,33 @@ class CoolingFan(Device):
 
 
 class ECU:
-    def __init__(self):
-        self.temp_sensor = TemperatureSensor()
-        self.fan = CoolingFan()
+    def __init__(self, engine):
+        self._engine = engine
+        self._temp_sensor = TemperatureSensor()
+        self._fan = CoolingFan()
 
     def update(self):
-        temp = self.temp_sensor.read()
+        rpm = self._engine.get_rpm()
+        throttle = self._engine.get_throttle()
 
-        if temp > 95:
-            self.fan.activate("HIGH")
-        else:
-            self.fan.activate("LOW")
+        temperature = self._temp_sensor.read(self._engine)
+        self._engine.set_temperature(temperature)
+
+        self._engine.update()
+
+    def set_throttle(self, value):
+        self._engine.set_throttle(value)
+
+    def get_engine(self):
+        return self._engine
+
 
 
 #Programos inicializavimas
 root = tk.Tk()
 root.title("ECU Simulator")
 root.geometry("400x300")
-ecu = ECU()
-engine = Engine(ecu)
-app = App(root)
+engine = Engine()
+ecu = ECU(engine)
+app = App(root, ecu)
 root.mainloop()
