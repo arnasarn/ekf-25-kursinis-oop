@@ -1,10 +1,12 @@
 import tkinter as tk
 
-#Pagrindinė aplikacijos klasė
+
+# Pagrindinė aplikacijos klasė
 class App:
     def __init__(self, root, ecu):
         self._root = root
         self._ecu = ecu
+
         self._rpm_label = tk.Label(root, font=("Arial", 16))
         self._rpm_label.pack(pady=20)
 
@@ -14,6 +16,8 @@ class App:
         self._temp_label = tk.Label(root, font=("Arial", 16))
         self._temp_label.pack(pady=20)
 
+        self._fan_label = tk.Label(root, font=("Arial", 16))
+        self._fan_label.pack(pady=20)
 
         root.bind("<KeyPress-Up>", self.throttle_on)
         root.bind("<KeyRelease-Up>", self.throttle_off)
@@ -26,9 +30,7 @@ class App:
         self._rpm_label.config(text=f"RPM: {engine.get_rpm()}")
         self._throttle_label.config(text=f"Throttle: {engine.get_throttle()}")
         self._temp_label.config(text=f"Temperature: {engine.get_temperature():.1f}")
-
-    def increase(self, event):
-        self.engine.increase_rpm()
+        self._fan_label.config(text=f"Fan: {self._ecu.get_fan_speed()}")
 
     def throttle_on(self, event):
         self._ecu.set_throttle(1)
@@ -42,25 +44,32 @@ class App:
         self._root.after(50, self.update_loop)
 
 
-#Variklio klasė
+# Variklio klasė
 class Engine:
     def __init__(self):
         # Konfigūracija
         self._max_rpm = 7000
         self._idle_rpm = 800
         self._max_temp = 120
-        
+
         # Būsena
         self._rpm = self._idle_rpm
-        self._temperature = 70
+        self._temperature = 50
         self._throttle = 0
         self._fuel_used = 0.0
+        self._fuel_injection = 0.0
 
     def set_throttle(self, value):
-        if (value != 0 and value != 1):
-            raise ValueError("Throttle can only be numbers 0 or 1")
+        if value != 0 and value != 1:
+            raise ValueError("Throttle can only be 0 or 1")
 
         self._throttle = value
+
+    def set_fuel_injection(self, value):
+        if value < 0:
+            raise ValueError("Fuel injection cannot be negative")
+
+        self._fuel_injection = value
 
     def set_temperature(self, value):
         self._temperature = min(value, self._max_temp)
@@ -74,6 +83,8 @@ class Engine:
             if self._rpm > self._idle_rpm:
                 self._rpm -= 100
 
+        self._fuel_used += self._fuel_injection * 0.05
+
     def get_rpm(self):
         return self._rpm
 
@@ -83,10 +94,13 @@ class Engine:
     def get_temperature(self):
         return self._temperature
 
+    def get_fuel_used(self):
+        return self._fuel_used
 
-#Tėvinė jutiklio klasė ir klasės, kurios ją paveldi
+
+# Tėvinė jutiklio klasė ir klasės, kurios ją paveldi
 class Sensor:
-    def read(self):
+    def read(self, engine):
         raise NotImplementedError
 
 
@@ -95,14 +109,21 @@ class TemperatureSensor(Sensor):
         return 50 + engine.get_rpm() * 0.01
 
 
-#Įrenginių tėvinė klasė ir klasės, kurios ją paveldi
+# Įrenginių tėvinė klasė ir klasės, kurios ją paveldi
 class Device:
     def activate(self, value):
         raise NotImplementedError
 
+
 class CoolingFan(Device):
+    def __init__(self):
+        self._speed = "OFF"
+
     def activate(self, value):
-        print(f"Fan speed set to {value}")
+        self._speed = value
+
+    def get_speed(self):
+        return self._speed
 
 
 class ECU:
@@ -118,7 +139,26 @@ class ECU:
         temperature = self._temp_sensor.read(self._engine)
         self._engine.set_temperature(temperature)
 
+        fuel_amount = self.calculate_fuel_injection(rpm, throttle)
+        self._engine.set_fuel_injection(fuel_amount)
+
+        self.control_fan(temperature)
+
         self._engine.update()
+
+    def calculate_fuel_injection(self, rpm, throttle):
+        if throttle == 0:
+            return 0.1
+
+        return 0.1 + rpm * 0.00005
+
+    def control_fan(self, temperature):
+        if temperature > 95:
+            self._fan.activate("HIGH")
+        elif temperature > 75:
+            self._fan.activate("LOW")
+        else:
+            self._fan.activate("OFF")
 
     def set_throttle(self, value):
         self._engine.set_throttle(value)
@@ -126,13 +166,17 @@ class ECU:
     def get_engine(self):
         return self._engine
 
+    def get_fan_speed(self):
+        return self._fan.get_speed()
 
 
-#Programos inicializavimas
+# Programos inicializavimas
 root = tk.Tk()
 root.title("ECU Simulator")
-root.geometry("400x300")
+root.geometry("400x350")
+
 engine = Engine()
 ecu = ECU(engine)
 app = App(root, ecu)
+
 root.mainloop()
