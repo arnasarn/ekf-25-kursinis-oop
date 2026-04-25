@@ -8,16 +8,19 @@ class App:
         self._ecu = ecu
 
         self._rpm_label = tk.Label(root, font=("Arial", 16))
-        self._rpm_label.pack(pady=20)
+        self._rpm_label.pack(pady=10)
 
         self._throttle_label = tk.Label(root, font=("Arial", 16))
-        self._throttle_label.pack(pady=20)
+        self._throttle_label.pack(pady=10)
 
         self._temp_label = tk.Label(root, font=("Arial", 16))
-        self._temp_label.pack(pady=20)
+        self._temp_label.pack(pady=10)
 
         self._fan_label = tk.Label(root, font=("Arial", 16))
-        self._fan_label.pack(pady=20)
+        self._fan_label.pack(pady=10)
+
+        self._fuel_used_label = tk.Label(root, font=("Arial", 16))
+        self._fuel_used_label.pack(pady=10)
 
         root.bind("<KeyPress-Up>", self.throttle_on)
         root.bind("<KeyRelease-Up>", self.throttle_off)
@@ -27,10 +30,11 @@ class App:
     def update_display(self):
         engine = self._ecu.get_engine()
 
-        self._rpm_label.config(text=f"RPM: {engine.get_rpm()}")
+        self._rpm_label.config(text=f"RPM: {engine.get_rpm():.0f}")
         self._throttle_label.config(text=f"Throttle: {engine.get_throttle()}")
         self._temp_label.config(text=f"Temperature: {engine.get_temperature():.1f}")
         self._fan_label.config(text=f"Fan: {self._ecu.get_fan_speed()}")
+        self._fuel_used_label.config(text=f"Fuel used: {engine.get_fuel_used():.4f}")
 
     def throttle_on(self, event):
         self._ecu.set_throttle(1)
@@ -51,10 +55,11 @@ class Engine:
         self._max_rpm = 7000
         self._idle_rpm = 800
         self._max_temp = 120
+        self._rpm_increase_rate = 0.08
 
         # Būsena
         self._rpm = self._idle_rpm
-        self._temperature = 50
+        self._temperature = 0
         self._throttle = 0
         self._fuel_used = 0.0
         self._fuel_injection = 0.0
@@ -72,16 +77,18 @@ class Engine:
         self._fuel_injection = value
 
     def set_temperature(self, value):
-        self._temperature = min(value, self._max_temp)
+        self._temperature = value
 
     def update(self):
-        if self._throttle == 1:
-            self._rpm += 100
-            if self._rpm > self._max_rpm:
-                self._rpm = self._max_rpm
-        else:
-            if self._rpm > self._idle_rpm:
-                self._rpm -= 100
+        target_rpm = self._idle_rpm + self._throttle * (self._max_rpm - self._idle_rpm)
+
+        self._rpm += (target_rpm - self._rpm) * self._rpm_increase_rate
+
+        if self._rpm < self._idle_rpm:
+            self._rpm = self._idle_rpm
+
+        if self._rpm > self._max_rpm:
+            self._rpm = self._max_rpm
 
         self._fuel_used += self._fuel_injection * 0.05
 
@@ -106,7 +113,7 @@ class Sensor:
 
 class TemperatureSensor(Sensor):
     def read(self, engine):
-        return 50 + engine.get_rpm() * 0.01
+        return 70 + engine.get_rpm() * 0.01
 
 
 # Įrenginių tėvinė klasė ir klasės, kurios ją paveldi
