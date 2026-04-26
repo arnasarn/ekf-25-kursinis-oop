@@ -1,5 +1,7 @@
 import tkinter as tk
+from abc import ABC, abstractmethod
 
+SIMULATION_SPEED_MS = 50
 
 # Pagrindinė aplikacijos klasė
 class App:
@@ -32,9 +34,9 @@ class App:
 
         self._rpm_label.config(text=f"RPM: {engine.get_rpm():.0f}")
         self._throttle_label.config(text=f"Throttle: {engine.get_throttle()}")
-        self._temp_label.config(text=f"Temperature: {engine.get_temperature():.1f}")
+        self._temp_label.config(text=f"Temperature: {engine.get_temperature():.1f} C°")
         self._fan_label.config(text=f"Fan: {self._ecu.get_fan_speed()}")
-        self._fuel_used_label.config(text=f"Fuel used: {engine.get_fuel_used():.4f}")
+        self._fuel_used_label.config(text=f"Fuel used: {engine.get_fuel_used():.4f} L")
 
     def throttle_on(self, event):
         self._ecu.set_throttle(1)
@@ -45,7 +47,7 @@ class App:
     def update_loop(self):
         self._ecu.update()
         self.update_display()
-        self._root.after(50, self.update_loop)
+        self._root.after(SIMULATION_SPEED_MS, self.update_loop)
 
 
 # Variklio klasė
@@ -107,8 +109,9 @@ class Engine:
 
 # Tėvinė jutiklio klasė ir klasės, kurios ją paveldi
 class Sensor:
+    @abstractmethod
     def read(self, engine):
-        raise NotImplementedError
+        pass
 
 
 class TemperatureSensor(Sensor):
@@ -133,11 +136,15 @@ class CoolingFan(Device):
         return self._speed
 
 
+# Elektroninės valdymo sistemos klasė
 class ECU:
     def __init__(self, engine):
         self._engine = engine
         self._temp_sensor = TemperatureSensor()
         self._fan = CoolingFan()
+        self._overheat_time = 0
+        self._overheat_limit = 5000
+        self._is_overheating = False
 
     def update(self):
         rpm = self._engine.get_rpm()
@@ -146,12 +153,26 @@ class ECU:
         temperature = self._temp_sensor.read(self._engine)
         self._engine.set_temperature(temperature)
 
+        self.check_overheating(temperature)
+
         fuel_amount = self.calculate_fuel_injection(rpm, throttle)
         self._engine.set_fuel_injection(fuel_amount)
 
         self.control_fan(temperature)
 
         self._engine.update()
+
+    def check_overheating(self, temperature):
+        dt = SIMULATION_SPEED_MS
+        if temperature >= self._engine._max_temp:
+            self._overheat_time += dt
+
+            if self._overheat_time >= self._overheat_limit and not self._is_overheating:
+                print("ENGINE OVERHEATING!")
+                self._is_overheating = True
+        else:
+            self._overheat_time = 0.0
+            self._is_overheating = False
 
     def calculate_fuel_injection(self, rpm, throttle):
         if throttle == 0:
