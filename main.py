@@ -147,6 +147,7 @@ class ThrottleSensor(Sensor):
 
 # Įrenginių tėvinė klasė ir klasės, kurios ją paveldi
 class Device:
+    @abstractmethod
     def activate(self, value):
         pass
     

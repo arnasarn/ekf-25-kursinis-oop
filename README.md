@@ -37,6 +37,61 @@ def set_throttle(self, value):
 
 Taip pat tikrinama, ar kvietėjas metodui paduoda teisinga reikšmę, t.y gazas gali būti arba įjungtas, arba neįjungtas (supaprastinas gazo pedalo veikimas, kadangi programa skirta valdyti klaviatūra).
 
+### 2 abstrakcija
+
+Tėvinės `Sensor` ir `Device` klasės yra abstračios klasės, kontraktas, kurį turi įgyvendinti šias klases paveldinčios klasės, šiuo atveju konkretūs prietaisai kaip `RPMSensor` ir `TemperatureSensor`
+
+```
+class Sensor:
+    @abstractmethod
+    def read(self, engine):
+        pass
+
+    def health_check(self):
+        print("Generic sensor health check")
+```
+
+```
+class Device:
+    @abstractmethod
+    def activate(self, value):
+        pass
+
+    def health_check(self):
+        print("Generic device health check")
+```
+
+### 3 paveldėjimas
+
+Kelios klasės paveldi bazines klases. Tai leidžia išplėsti funkcionalumą nekeičiant esamo kodo.
+
+```
+class CoolingFan(Device):
+    def __init__(self):
+        self._speed = "OFF"
+
+    def activate(self, value):
+        self._speed = value
+
+    def get_speed(self):
+        return self._speed
+
+    def health_check(self):
+        print("CoolingFan OK")
+```
+
+### 4 polimorfizmas
+
+Skirtingi jutikliai ir prietasai turi tokį patį metodą `health_check`, kuris veikia skirtingai, priklausomai nuo to kokiam objektui metodas priklauso. Šioje programoje tai panaudojama diagnostikos metode `ECU` klasėje, kuris išveda visų prietaisų būklę:
+
+```
+def run_diagnostics(self):
+   self._temp_sensor.health_check()
+   self._rpm_sensor.health_check()
+   self._throttle_sensor.health_check()
+   self._fan.health_check()
+```
+
 1. Introduction
    a. What is your application?
    b. How to run the program?
