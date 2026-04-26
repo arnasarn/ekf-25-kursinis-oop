@@ -13,6 +13,30 @@ Programa paleidžiama terminale įvedus komandą
 python main.py
 ```
 
+Unit testai paleidžiami komanda
+
+```bash
+python -m unittest test_ecu.py
+```
+
+## Analizė
+
+### OOP principai
+
+### 1 enkapsuliacija
+
+Visos klasės apsaugo savo vidinius atributus. Visi kintamieji pažymėti `_`, tai reiškia kad už klasės ribų draudžiama pasiekti šiuos kintamuosius. Visos klasės turi metodus, skirtus suteikti priegą prie kintamųjų, pavyzdžiui, klasėje `Engine`:
+
+```
+def set_throttle(self, value):
+   if value != 0 and value != 1:
+      raise ValueError("Throttle can only be 0 or 1")
+
+   self._throttle = value
+```
+
+Taip pat tikrinama, ar kvietėjas metodui paduoda teisinga reikšmę, t.y gazas gali būti arba įjungtas, arba neįjungtas (supaprastinas gazo pedalo veikimas, kadangi programa skirta valdyti klaviatūra).
+
 1. Introduction
    a. What is your application?
    b. How to run the program?

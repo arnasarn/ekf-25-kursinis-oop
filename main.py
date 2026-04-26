@@ -148,7 +148,7 @@ class ThrottleSensor(Sensor):
 # Įrenginių tėvinė klasė ir klasės, kurios ją paveldi
 class Device:
     def activate(self, value):
-        raise NotImplementedError
+        pass
     
     def health_check(self):
         print("Generic device health check")
