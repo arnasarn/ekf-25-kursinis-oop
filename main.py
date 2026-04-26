@@ -1,5 +1,9 @@
 import tkinter as tk
 from abc import ABC, abstractmethod
+import csv
+import os
+
+CONFIG_FILE = "engine_config.csv"
 
 SIMULATION_SPEED_MS = 50
 
@@ -234,7 +238,47 @@ class ECU:
     def get_fan_speed(self):
         return self._fan.get_speed()
     
+def save_engine_parameters(max_rpm, idle_rpm, max_temp, rpm_increase_rate):
+    with open(CONFIG_FILE, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["max_rpm", "idle_rpm", "max_temp", "rpm_increase_rate"])
+        writer.writerow([max_rpm, idle_rpm, max_temp, rpm_increase_rate])
+
+    print("Engine parameters saved to CSV.")
+
+
+def load_engine_parameters():
+    if not os.path.exists(CONFIG_FILE):
+        print("No saved CSV file found.")
+        return None
+
+    with open(CONFIG_FILE, "r") as file:
+        reader = csv.DictReader(file)
+        row = next(reader)
+
+        return (
+            int(row["max_rpm"]),
+            int(row["idle_rpm"]),
+            float(row["max_temp"]),
+            float(row["rpm_increase_rate"])
+        )
+
+
 def ask_engine_parameters():
+    print("1 - Enter new engine parameters")
+    print("2 - Load engine parameters from CSV")
+
+    choice = input("Choose option [1]: ").strip()
+
+    if choice == "2":
+        loaded = load_engine_parameters()
+
+        if loaded is not None:
+            print("Engine parameters loaded from CSV.")
+            return loaded
+
+        print("Using manual input instead.\n")
+
     print("Enter engine parameters. Press Enter to use default value.\n")
 
     def ask_number(name, default, number_type=float):
@@ -250,8 +294,12 @@ def ask_engine_parameters():
     max_temp = ask_number("Max temperature", 120, float)
     rpm_increase_rate = ask_number("RPM increase rate", 0.08, float)
 
-    return max_rpm, idle_rpm, max_temp, rpm_increase_rate
+    save_choice = input("Save these parameters to CSV? [y/N]: ").strip().lower()
 
+    if save_choice == "y":
+        save_engine_parameters(max_rpm, idle_rpm, max_temp, rpm_increase_rate)
+
+    return max_rpm, idle_rpm, max_temp, rpm_increase_rate
 
 # Programos inicializavimas
 root = tk.Tk()

@@ -1,0 +1,2 @@
+max_rpm,idle_rpm,max_temp,rpm_increase_rate
+7000,800,120,0.08
