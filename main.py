@@ -168,10 +168,43 @@ class CoolingFan(Device):
         print("CoolingFan OK")
 
 
+
+# Strategy pattern strategijos apskaičiuoti kuro vartojimui
+class FuelStrategy(ABC):
+    @abstractmethod
+    def calculate(self, rpm, throttle):
+        pass
+
+
+class EcoFuelStrategy(FuelStrategy):
+    def calculate(self, rpm, throttle):
+        if throttle == 0:
+            return 0.05
+
+        return 0.05 + rpm * 0.00003
+
+
+class SportFuelStrategy(FuelStrategy):
+    def calculate(self, rpm, throttle):
+        if throttle == 0:
+            return 0.15
+
+        return 0.15 + rpm * 0.00008
+
+
+class DieselFuelStrategy(FuelStrategy):
+    def calculate(self, rpm, throttle):
+        if throttle == 0:
+            return 0.08
+
+        return 0.08 + rpm * 0.00004
+
+
 # Elektroninės valdymo sistemos klasė
 class ECU:
-    def __init__(self, engine):
+    def __init__(self, engine, fuel_strategy):
         self._engine = engine
+        self._fuel_strategy = fuel_strategy
         self._temp_sensor = TemperatureSensor()
         self._fan = CoolingFan()
         self._rpm_sensor = RPMSensor()
@@ -190,7 +223,7 @@ class ECU:
 
         self.check_overheating(temperature)
 
-        fuel_amount = self.calculate_fuel_injection(rpm, throttle)
+        fuel_amount = self._fuel_strategy.calculate(rpm, throttle)
         self._engine.set_fuel_injection(fuel_amount)
 
         self.control_fan(temperature)
@@ -209,11 +242,6 @@ class ECU:
             self._overheat_time = 0.0
             self._is_overheating = False
 
-    def calculate_fuel_injection(self, rpm, throttle):
-        if throttle == 0:
-            return 0.1
-
-        return 0.1 + rpm * 0.00005
 
     def control_fan(self, temperature):
         if temperature > 95:
@@ -264,6 +292,22 @@ def load_engine_parameters():
         )
 
 
+def ask_fuel_strategy():
+    print("\nChoose fuel calculation strategy:")
+    print("1 - Eco")
+    print("2 - Sport")
+    print("3 - Diesel")
+
+    choice = input("Choose option [1]: ").strip()
+
+    if choice == "2":
+        return SportFuelStrategy()
+    elif choice == "3":
+        return DieselFuelStrategy()
+    else:
+        return EcoFuelStrategy()
+
+
 def ask_engine_parameters():
     print("1 - Enter new engine parameters")
     print("2 - Load engine parameters from CSV")
@@ -307,6 +351,7 @@ root.title("ECU Simulator")
 root.geometry("400x350")
 
 max_rpm, idle_rpm, max_temp, rpm_increase_rate = ask_engine_parameters()
+fuel_strategy = ask_fuel_strategy()
 
 engine = Engine(
     max_rpm=max_rpm,
@@ -315,7 +360,7 @@ engine = Engine(
     rpm_increase_rate=rpm_increase_rate
 )
 
-ecu = ECU(engine)
+ecu = ECU(engine, fuel_strategy)
 app = App(root, ecu)
 
 root.mainloop()
