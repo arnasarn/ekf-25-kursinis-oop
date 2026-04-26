@@ -52,12 +52,12 @@ class App:
 
 # Variklio klasė
 class Engine:
-    def __init__(self):
+    def __init__(self, max_rpm=7000, idle_rpm=800, max_temp=120, rpm_increase_rate=0.08):
         # Konfigūracija
-        self._max_rpm = 7000
-        self._idle_rpm = 800
-        self._max_temp = 120
-        self._rpm_increase_rate = 0.08
+        self._max_rpm = max_rpm
+        self._idle_rpm = idle_rpm
+        self._max_temp = max_temp
+        self._rpm_increase_rate = rpm_increase_rate
 
         # Būsena
         self._rpm = self._idle_rpm
@@ -233,6 +233,24 @@ class ECU:
 
     def get_fan_speed(self):
         return self._fan.get_speed()
+    
+def ask_engine_parameters():
+    print("Enter engine parameters. Press Enter to use default value.\n")
+
+    def ask_number(name, default, number_type=float):
+        value = input(f"{name} [{default}]: ")
+
+        if value.strip() == "":
+            return default
+
+        return number_type(value)
+
+    max_rpm = ask_number("Max RPM", 7000, int)
+    idle_rpm = ask_number("Idle RPM", 800, int)
+    max_temp = ask_number("Max temperature", 120, float)
+    rpm_increase_rate = ask_number("RPM increase rate", 0.08, float)
+
+    return max_rpm, idle_rpm, max_temp, rpm_increase_rate
 
 
 # Programos inicializavimas
@@ -240,7 +258,15 @@ root = tk.Tk()
 root.title("ECU Simulator")
 root.geometry("400x350")
 
-engine = Engine()
+max_rpm, idle_rpm, max_temp, rpm_increase_rate = ask_engine_parameters()
+
+engine = Engine(
+    max_rpm=max_rpm,
+    idle_rpm=idle_rpm,
+    max_temp=max_temp,
+    rpm_increase_rate=rpm_increase_rate
+)
+
 ecu = ECU(engine)
 app = App(root, ecu)
 
