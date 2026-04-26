@@ -172,9 +172,10 @@ Taip pat buvo testuojamas ECU veikimas. Buvo tikrinama, ar ECU atnaujina varikli
 ## Rezultatai ir apibendrinimas
 
 Programos kūrimo metu kilo keletas iššūkių.
--Vienas iš pagrindinių sunkumų buvo teisingai paskirstyti atsakomybes tarp ECU ir variklio klasės, kad sistema būtų logiška ir lengvai prižiūrima.
--Kilo sunkumų sugalvoti, kaip reikšmingai panaudoti paveldėjimą ir abstrakciją.
--Nepavyko išsiaiškinti, kodėl kartais ECU nesiunčia pranešimo, kad variklis perkaista, nors pasiekta maksimali temperatūra ir perkaitimo laikas
+
+- Vienas iš pagrindinių sunkumų buvo teisingai paskirstyti atsakomybes tarp ECU ir variklio klasės, kad sistema būtų logiška ir lengvai prižiūrima.
+- Kilo sunkumų sugalvoti, kaip reikšmingai panaudoti paveldėjimą ir abstrakciją.
+- Nepavyko išsiaiškinti, kodėl kartais ECU nesiunčia pranešimo, kad variklis perkaista, nors pasiekta maksimali temperatūra ir perkaitimo laikas
 
 Šio darbo metu buvo sukurtas veikiantis automobilio variklio ECU simuliatorius su grafine sąsaja. Programa leidžia vartotojui keisti variklio parametrus, stebėti jų pokyčius realiu laiku ir naudoti skirtingas degalų skaičiavimo strategijas. Darbo metu sėkmingai pritaikyti pagrindiniai objektinio programavimo principai ir dizaino šablonai, kurie pagerino kodo struktūrą ir lankstumą. Galutinis rezultatas yra aiškiai organizuota, funkcionali ir lengvai plečiama sistema.
 
