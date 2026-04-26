@@ -113,16 +113,41 @@ class Sensor:
     def read(self, engine):
         pass
 
+    def health_check(self):
+        print("Generic sensor health check")
+
 
 class TemperatureSensor(Sensor):
     def read(self, engine):
         return 70 + engine.get_rpm() * 0.01
+    
+    def health_check(self):
+        print("TemperatureSensor OK")
+
+
+class RPMSensor(Sensor):
+    def read(self, engine):
+        return engine.get_rpm()
+    
+    def health_check(self):
+        print("RPMSensor OK")
+
+
+class ThrottleSensor(Sensor):
+    def read(self, engine):
+        return engine.get_throttle()
+    
+    def health_check(self):
+        print("ThrottleSensor OK")
 
 
 # Įrenginių tėvinė klasė ir klasės, kurios ją paveldi
 class Device:
     def activate(self, value):
         raise NotImplementedError
+    
+    def health_check(self):
+        print("Generic device health check")
 
 
 class CoolingFan(Device):
@@ -134,6 +159,9 @@ class CoolingFan(Device):
 
     def get_speed(self):
         return self._speed
+    
+    def health_check(self):
+        print("CoolingFan OK")
 
 
 # Elektroninės valdymo sistemos klasė
@@ -142,13 +170,16 @@ class ECU:
         self._engine = engine
         self._temp_sensor = TemperatureSensor()
         self._fan = CoolingFan()
+        self._rpm_sensor = RPMSensor()
+        self._throttle_sensor = ThrottleSensor()
         self._overheat_time = 0
         self._overheat_limit = 5000
         self._is_overheating = False
+        self.run_diagnostics()
 
     def update(self):
-        rpm = self._engine.get_rpm()
-        throttle = self._engine.get_throttle()
+        rpm = self._rpm_sensor.read(self._engine)
+        throttle = self._throttle_sensor.read(self._engine)
 
         temperature = self._temp_sensor.read(self._engine)
         self._engine.set_temperature(temperature)
@@ -187,6 +218,12 @@ class ECU:
             self._fan.activate("LOW")
         else:
             self._fan.activate("OFF")
+
+    def run_diagnostics(self):
+        self._temp_sensor.health_check()
+        self._rpm_sensor.health_check()
+        self._throttle_sensor.health_check()
+        self._fan.health_check()
 
     def set_throttle(self, value):
         self._engine.set_throttle(value)
