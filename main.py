@@ -346,21 +346,22 @@ def ask_engine_parameters():
     return max_rpm, idle_rpm, max_temp, rpm_increase_rate
 
 # Programos inicializavimas
-root = tk.Tk()
-root.title("ECU Simulator")
-root.geometry("400x350")
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("ECU Simulator")
+    root.geometry("400x350")
 
-max_rpm, idle_rpm, max_temp, rpm_increase_rate = ask_engine_parameters()
-fuel_strategy = ask_fuel_strategy()
+    max_rpm, idle_rpm, max_temp, rpm_increase_rate = ask_engine_parameters()
+    fuel_strategy = ask_fuel_strategy()
 
-engine = Engine(
-    max_rpm=max_rpm,
-    idle_rpm=idle_rpm,
-    max_temp=max_temp,
-    rpm_increase_rate=rpm_increase_rate
-)
+    engine = Engine(
+        max_rpm=max_rpm,
+        idle_rpm=idle_rpm,
+        max_temp=max_temp,
+        rpm_increase_rate=rpm_increase_rate
+    )
 
-ecu = ECU(engine, fuel_strategy)
-app = App(root, ecu)
+    ecu = ECU(engine, fuel_strategy)
+    app = App(root, ecu)
 
-root.mainloop()
+    root.mainloop()
