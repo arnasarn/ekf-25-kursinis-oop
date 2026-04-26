@@ -168,7 +168,6 @@ class CoolingFan(Device):
         print("CoolingFan OK")
 
 
-
 # Strategy pattern strategijos apskaičiuoti kuro vartojimui
 class FuelStrategy(ABC):
     @abstractmethod
@@ -242,7 +241,6 @@ class ECU:
             self._overheat_time = 0.0
             self._is_overheating = False
 
-
     def control_fan(self, temperature):
         if temperature > 95:
             self._fan.activate("HIGH")
@@ -265,7 +263,9 @@ class ECU:
 
     def get_fan_speed(self):
         return self._fan.get_speed()
-    
+
+
+# Variklio parametrų saugojimo ir skaitymo funkcijos
 def save_engine_parameters(max_rpm, idle_rpm, max_temp, rpm_increase_rate):
     with open(CONFIG_FILE, "w", newline="") as file:
         writer = csv.writer(file)
@@ -292,6 +292,7 @@ def load_engine_parameters():
         )
 
 
+# Funkcijos variklio duomenų ivedimui terminale
 def ask_fuel_strategy():
     print("\nChoose fuel calculation strategy:")
     print("1 - Eco")
@@ -344,6 +345,7 @@ def ask_engine_parameters():
         save_engine_parameters(max_rpm, idle_rpm, max_temp, rpm_increase_rate)
 
     return max_rpm, idle_rpm, max_temp, rpm_increase_rate
+
 
 # Programos inicializavimas
 if __name__ == "__main__":
